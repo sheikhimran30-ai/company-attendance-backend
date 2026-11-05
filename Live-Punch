@@ -86,7 +86,7 @@
             const lat = pos.coords.latitude;
             const lon = pos.coords.longitude;
 
-            msg.innerText = "⏳ Synchronizing with cloud database... (pehli baar 30-50 sec lag sakte hain)";
+            msg.innerText = "⏳ Synchronizing with cloud database... (Wait...)";
 
             const cloudUrl = "https://company-attendance-backend.onrender.com/api/punch";
 
@@ -124,5 +124,7 @@
 </script>
 </body>
 </html>
+
+
 
 
