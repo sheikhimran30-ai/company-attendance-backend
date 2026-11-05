@@ -30,37 +30,41 @@ class AttendanceRecord(BaseModel):
 def mark_attendance(record: AttendanceRecord):
     if record.punch_type not in ['IN', 'OUT']:
         raise HTTPException(status_code=400, detail="Invalid punch configuration token")
-    
-    # ✅ FIXED 100% COMPLETE GOOGLE MAPS URL
-    maps_link = f"https://google.com{record.latitude},{record.longitude}"
-    
+
+    maps_link = f"https://www.google.com/maps?q={record.latitude},{record.longitude}"
+
+    conn = None
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        
+
         cursor.execute("SELECT name FROM public.employees WHERE emp_id = %s;", (record.emp_id,))
         emp_exists = cursor.fetchone()
         if not emp_exists:
             raise HTTPException(status_code=404, detail="Employee configuration not found")
 
-        emp_name = str(emp_exists)
+        emp_name = str(emp_exists[0])
 
         query = """
             INSERT INTO public.attendance_logs (emp_id, punch_type, latitude, longitude, punch_address, punch_time)
             VALUES (%s, %s, %s, %s, %s, %s);
         """
         cursor.execute(query, (record.emp_id, record.punch_type, record.latitude, record.longitude, maps_link, datetime.now()))
-        
+
         conn.commit()
         cursor.close()
-        conn.close()
-        
+
         return {
-            "status": "Success", 
-            "message": f"Punch {record.punch_type} recorded dynamically", 
+            "status": "Success",
+            "message": f"Punch {record.punch_type} recorded dynamically",
             "employee": emp_name,
             "maps_url": maps_link
         }
-        
+
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if conn:
+            conn.close()
